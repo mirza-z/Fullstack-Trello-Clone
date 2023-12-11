@@ -9,15 +9,29 @@ import { revalidatePath } from "next/cache";
 import { CreateBoard } from "./schema";
 
 const handler = async (data:InputType): Promise<ReturnType> => {
-    const { userId } = auth();
 
-    if(!userId){
+     const { userId, orgId } = auth();
+
+     if (!userId || !orgId) {
         return {
-            error: "Unauthorized",
-        }
-    }
+          error: "Unauthorized",
+        };
+      }
+    const { title, image } = data;
 
-    const { title } = data;
+    const [
+        imageId,
+        imageThumbUrl,
+        imageFullUrl,
+        imageLinkHTML,
+        imageUserName
+    ] = image.split("|");
+
+    if(!imageId || !imageThumbUrl || !imageFullUrl || !imageLinkHTML || !imageUserName){
+        return{
+            error: "Missing fields. Failed to create board."
+        };
+    }
 
     let board;
 
@@ -25,6 +39,12 @@ const handler = async (data:InputType): Promise<ReturnType> => {
         board = await db.board.create({
             data:{
                 title,
+                orgId,
+                imageId,
+                imageThumbUrl,
+                imageFullUrl,
+                imageUserName,
+                imageLinkHTML,
             }
         });
     } catch (error) {
